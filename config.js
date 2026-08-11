@@ -7,7 +7,7 @@ window.DRIVEWELL_CONFIG = {
 
   // 1. Paste your Amplitude project API key here.
   //    Use the DEMO ORG project, not CDK's sandbox.
-  AMPLITUDE_API_KEY: "PASTE_YOUR_API_KEY_HERE",
+  AMPLITUDE_API_KEY: "4983c6f0b38db48a2ea3c0a91167ba46",
 
   // 2. Optional. Shows in the status bar so you know which project you're
   //    pointed at during a screenshare. Purely cosmetic.

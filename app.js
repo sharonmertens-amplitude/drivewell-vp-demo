@@ -33,67 +33,12 @@ const PERSONA = currentPersona();
    2. AMPLITUDE
    ========================================================================== */
 
-const KEY_OK = CFG.AMPLITUDE_API_KEY && !CFG.AMPLITUDE_API_KEY.startsWith("PASTE_");
-
-function loadAmplitude() {
-  return new Promise((resolve, reject) => {
-    if (!KEY_OK) return reject("no key");
-    const s = document.createElement("script");
-    s.src = `https://cdn.amplitude.com/script/${CFG.AMPLITUDE_API_KEY}.js`;
-    s.onload = resolve;
-    s.onerror = () => reject("script failed to load");
-    document.head.appendChild(s);
-  });
-}
-
-async function initAmplitude() {
-  const dot = $("#ampDot"), label = $("#ampStatus"), gLabel = $("#guidesStatus");
-
-  if (!KEY_OK) {
-    dot.classList.add("err");
-    label.textContent = "no API key set";
-    gLabel.textContent = "—";
-    console.warn("[Drivewell] Add your API key to config.js");
-    return;
-  }
-
-  try {
-    await loadAmplitude();
-
-    window.amplitude.init(CFG.AMPLITUDE_API_KEY, {
-      fetchRemoteConfig: true,
-      autocapture: CFG.AUTOCAPTURE !== false
-    });
-
-    // Identity + user properties. This is what Guide targeting reads.
-    window.amplitude.setUserId(PERSONA.user_id);
-    const identify = new window.amplitude.Identify();
-    Object.entries(PERSONA.properties).forEach(([k, v]) => identify.set(k, v));
-    window.amplitude.identify(identify);
-
-    dot.classList.add("ok");
-    label.textContent = "connected";
-
-    // Guides & Surveys ships with the unified script when it's enabled on the
-    // project. Give it a beat to attach, then report honestly.
-    setTimeout(() => {
-      if (window.engagement) {
-        gLabel.textContent = "ready";
-      } else {
-        gLabel.textContent = "not detected";
-        console.warn(
-          "[Drivewell] window.engagement is undefined. Guides & Surveys may " +
-          "not be enabled on this project. Check the project's entitlement."
-        );
-      }
-    }, 2200);
-
-  } catch (err) {
-    dot.classList.add("err");
-    label.textContent = "not connected";
-    gLabel.textContent = "—";
-    console.error("[Drivewell] Amplitude failed:", err);
-  }
+/* Central tracking. Every event also renders in the feed panel so the
+   analytics connection is visible on screen during a demo. */
+function track(eventName, props = {}) {
+  const payload = { ...props, store_id: PERSONA.properties.store_id };
+  if (window.amplitude?.track) window.amplitude.track(eventName, payload);
+  pushFeed(eventName, payload);
 }
 
 /* Central tracking. Every event also renders in the feed panel so the

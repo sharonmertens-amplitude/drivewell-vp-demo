@@ -33,12 +33,85 @@ const PERSONA = currentPersona();
    2. AMPLITUDE
    ========================================================================== */
 
-/* Central tracking. Every event also renders in the feed panel so the
-   analytics connection is visible on screen during a demo. */
-function track(eventName, props = {}) {
-  const payload = { ...props, store_id: PERSONA.properties.store_id };
-  if (window.amplitude?.track) window.amplitude.track(eventName, payload);
-  pushFeed(eventName, payload);
+const KEY_OK = CFG.AMPLITUDE_API_KEY && !CFG.AMPLITUDE_API_KEY.startsWith("PASTE_");
+
+/* Load a script tag and wait for it. Order matters: the Analytics SDK must
+   finish loading before the Engagement (Guides & Surveys) SDK. */
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src;
+    s.async = false;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error("failed to load " + src));
+    document.head.appendChild(s);
+  });
+}
+
+async function initAmplitude() {
+  const dot = $("#ampDot"), label = $("#ampStatus"), gLabel = $("#guidesStatus");
+
+  if (!KEY_OK) {
+    dot.classList.add("err");
+    label.textContent = "no API key set";
+    gLabel.textContent = "—";
+    console.warn("[Drivewell] Add your API key to config.js");
+    return;
+  }
+
+  const key = CFG.AMPLITUDE_API_KEY;
+
+  try {
+    // 1. Analytics SDK
+    await loadScript(`https://cdn.amplitude.com/script/${key}.js`);
+
+    // 2. Engagement SDK (Guides & Surveys). Separate script, loaded after.
+    try {
+      await loadScript(`https://cdn.amplitude.com/script/${key}.engagement.js`);
+    } catch (e) {
+      console.warn("[Drivewell] Engagement SDK didn't load:", e.message);
+    }
+
+    // 3. Register the plugin BEFORE init, so Guides boot with the right
+    //    user identity and session already in place.
+    if (window.engagement?.plugin) {
+      window.amplitude.add(window.engagement.plugin());
+    }
+
+    // 4. Init
+    window.amplitude.init(key, {
+      fetchRemoteConfig: true,
+      autocapture: CFG.AUTOCAPTURE !== false
+    });
+
+    // 5. Identity + user properties. This is what Guide targeting reads.
+    window.amplitude.setUserId(PERSONA.user_id);
+    const identify = new window.amplitude.Identify();
+    Object.entries(PERSONA.properties).forEach(([k, v]) => identify.set(k, v));
+    window.amplitude.identify(identify);
+
+    dot.classList.add("ok");
+    label.textContent = "connected";
+
+    setTimeout(() => {
+      if (window.engagement) {
+        gLabel.textContent = "ready";
+      } else {
+        gLabel.textContent = "not detected";
+        console.warn(
+          "[Drivewell] window.engagement is undefined. Check that Guides & " +
+          "Surveys is enabled on this project, and that no ad blocker is " +
+          "blocking cdn.amplitude.com."
+        );
+      }
+    }, 2500);
+
+  } catch (err) {
+    dot.classList.add("err");
+    label.textContent = "not connected";
+    gLabel.textContent = "—";
+    console.error("[Drivewell] Amplitude failed:", err);
+  }
 }
 
 /* Central tracking. Every event also renders in the feed panel so the

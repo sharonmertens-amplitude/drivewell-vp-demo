@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drivewell Auto Group · Dealer Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23e8622a'/><text x='16' y='23' font-family='Inter,sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'>D</text></svg>">
+</head>
+<body>
+
+<!-- ===================== SIDEBAR ===================== -->
+<aside class="sidebar" data-guide="sidebar">
+  <div class="brand">
+    <div class="brand-mark">D</div>
+    <div class="brand-text">
+      <div class="brand-name">Drivewell</div>
+      <div class="brand-sub">Auto Group · DMS</div>
+    </div>
+  </div>
+
+  <nav class="nav" id="nav">
+    <button class="nav-item is-active" data-view="dashboard" data-guide="nav-dashboard">
+      <span class="nav-ico">▦</span> Dashboard
+    </button>
+    <button class="nav-item" data-view="salesdesk" data-guide="nav-salesdesk">
+      <span class="nav-ico">◈</span> Sales Desk
+      <span class="nav-badge" id="navDealCount">3</span>
+    </button>
+    <button class="nav-item" data-view="service" data-guide="nav-service">
+      <span class="nav-ico">⚙</span> Service
+    </button>
+    <button class="nav-item" data-view="parts" data-guide="nav-parts">
+      <span class="nav-ico">▤</span> Parts
+    </button>
+    <button class="nav-item" data-view="customers" data-guide="nav-customers">
+      <span class="nav-ico">◉</span> Customers
+    </button>
+    <button class="nav-item" data-view="reports" data-guide="nav-reports">
+      <span class="nav-ico">▥</span> Reports
+    </button>
+  </nav>
+
+  <div class="sidebar-foot">
+    <div class="quota">
+      <div class="quota-row">
+        <span>Month-to-date target</span>
+        <span class="quota-pct" id="quotaPct">68%</span>
+      </div>
+      <div class="quota-bar"><div class="quota-fill" id="quotaFill"></div></div>
+      <div class="quota-sub">82 of 120 units</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ===================== MAIN ===================== -->
+<main class="main">
+
+  <header class="topbar" data-guide="topbar">
+    <div class="crumbs">
+      <span class="crumb-root">Drivewell Auto Group</span>
+      <span class="crumb-sep">/</span>
+      <span class="crumb-current" id="crumbCurrent">Dashboard</span>
+    </div>
+    <div class="topbar-right">
+      <div class="store-chip" data-guide="store-chip">
+        <span class="chip-label">STORE</span>
+        <span class="chip-value" id="chipStore">Drivewell North #014</span>
+      </div>
+      <div class="oem-chip">OEM</div>
+      <button class="icon-btn" data-guide="notifications" title="Notifications">
+        <span class="dot"></span>◔
+      </button>
+      <div class="avatar" id="avatarInitials" data-guide="avatar">MC</div>
+    </div>
+  </header>
+
+  <div class="canvas" id="canvas"><!-- views render here --></div>
+
+</main>
+
+<!-- ===================== DEAL WIZARD ===================== -->
+<div class="modal-veil" id="dealVeil" hidden>
+  <div class="wizard" role="dialog" aria-modal="true" aria-labelledby="wizTitle" data-guide="deal-wizard">
+    <div class="wizard-head">
+      <div>
+        <div class="wizard-eyebrow">New deal</div>
+        <h2 id="wizTitle" class="wizard-title">Start a deal</h2>
+      </div>
+      <button class="wizard-close" id="wizClose" aria-label="Close">✕</button>
+    </div>
+
+    <ol class="wizard-steps" id="wizSteps">
+      <li class="wstep is-current" data-step="1"><span>1</span> Customer</li>
+      <li class="wstep" data-step="2"><span>2</span> Vehicle</li>
+      <li class="wstep" data-step="3"><span>3</span> Trade &amp; terms</li>
+      <li class="wstep" data-step="4"><span>4</span> Review</li>
+    </ol>
+
+    <div class="wizard-body" id="wizBody"><!-- step content --></div>
+
+    <div class="wizard-foot">
+      <button class="btn btn-ghost" id="wizBack" data-guide="wizard-back">Back</button>
+      <div class="wizard-foot-right">
+        <span class="wizard-hint" id="wizHint"></span>
+        <button class="btn btn-primary" id="wizNext" data-guide="wizard-next">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TOAST ===================== -->
+<div class="toast-stack" id="toastStack"></div>
+
+<!-- ===================== EVENT FEED ===================== -->
+<section class="feed" id="feed" data-guide="event-feed">
+  <header class="feed-head">
+    <div class="feed-title">
+      <span class="feed-pulse"></span>
+      Events to Amplitude
+    </div>
+    <div class="feed-actions">
+      <button class="feed-btn" id="feedClear">Clear</button>
+      <button class="feed-btn" id="feedHide" aria-label="Hide">–</button>
+    </div>
+  </header>
+  <div class="feed-list" id="feedList">
+    <div class="feed-empty">Click around. Events show up here as they send.</div>
+  </div>
+</section>
+<button class="feed-reopen" id="feedReopen" hidden>Events</button>
+
+<!-- ===================== STATUS BAR ===================== -->
+<footer class="statusbar" data-guide="statusbar">
+  <div class="status-left">
+    <span class="status-item">
+      <span class="status-dot" id="ampDot"></span>
+      Amplitude: <b id="ampStatus">connecting…</b>
+    </span>
+    <span class="status-item">Guides: <b id="guidesStatus">checking…</b></span>
+    <span class="status-item status-project" id="projectLabel"></span>
+  </div>
+
+  <div class="status-right">
+    <label class="persona-label" for="personaSelect">Signed in as</label>
+    <select class="persona-select" id="personaSelect" data-guide="persona-select"></select>
+    <span class="status-item">Role: <b id="statusRole">—</b></span>
+    <span class="status-item">Store: <b id="statusStore">—</b></span>
+    <span class="status-item">Tenure: <b id="statusTenure">—</b></span>
+  </div>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

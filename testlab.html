@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drivewell · Guide Test Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12243a; --navy-2:#1a3350; --ink:#16202c; --ink-2:#4a5a6b; --ink-3:#7b8b9c;
+  --canvas:#f2f5f8; --surface:#fff; --line:#e0e7ee; --line-2:#eef2f6;
+  --orange:#e8622a; --orange-lt:#fdefe8; --green:#0f8a5f; --green-lt:#e6f5ee;
+  --red:#c0392b; --red-lt:#fdeceb; --blue:#1f6fd0; --blue-lt:#e9f1fc;
+  --amber:#b57611; --amber-lt:#fdf3e1;
+  --sans:'Inter',system-ui,sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--canvas);color:var(--ink);font-size:14px;line-height:1.5;padding-bottom:80px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+code{font-family:var(--mono);font-size:12.5px;background:var(--line-2);padding:1.5px 5px;border-radius:4px;word-break:break-all}
+
+header{background:var(--navy);color:#fff;padding:20px 26px}
+header h1{font-size:19px;font-weight:700;letter-spacing:-.02em}
+header p{color:#9db4c9;font-size:13px;margin-top:3px}
+.status{display:flex;gap:16px;margin-top:12px;font-family:var(--mono);font-size:11.5px;color:#9db4c9;flex-wrap:wrap}
+.status b{color:#fff}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#f5a623;margin-right:5px}
+.dot.ok{background:#4ade80} .dot.err{background:#ef4444}
+
+.wrap{max-width:1080px;margin:0 auto;padding:22px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:20px;overflow:hidden}
+.card-head{padding:15px 18px;border-bottom:1px solid var(--line-2);display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.card-title{font-size:15.5px;font-weight:600}
+.card-why{color:var(--ink-2);font-size:12.5px;margin-top:3px;max-width:62ch}
+.badge{font-size:10px;font-weight:700;letter-spacing:.05em;padding:3px 8px;border-radius:5px;white-space:nowrap;font-family:var(--mono)}
+.badge-1{background:var(--red-lt);color:var(--red)}
+.badge-2{background:var(--amber-lt);color:var(--amber)}
+.badge-3{background:var(--blue-lt);color:var(--blue)}
+.card-body{padding:18px}
+
+.sel{background:var(--navy);color:#dbe7f2;font-family:var(--mono);font-size:12px;padding:10px 13px;border-radius:7px;margin:10px 0;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.sel span{word-break:break-all}
+.sel button{color:#8fa8c0;font-size:10.5px;padding:3px 8px;border:1px solid #2c4a68;border-radius:4px;white-space:nowrap}
+.sel button:hover{color:#fff;border-color:#4a6a8a}
+
+.note{border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.55;margin:12px 0}
+.note-warn{background:var(--red-lt);color:#8a2318}
+.note-info{background:var(--blue-lt);color:#164a8c}
+.note-ok{background:var(--green-lt);color:#0a5c40}
+.note b{font-weight:700}
+
+.btn{border-radius:7px;padding:9px 15px;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:7px}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-primary:hover{background:#cc5220}
+.btn-ghost{border:1px solid var(--line);background:var(--surface);color:var(--ink-2)}
+.btn-ghost:hover{background:var(--canvas);color:var(--ink)}
+.row-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:6px}
+
+/* ---- repeating table (mirrors VIS inventory list) ---- */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.05em;color:var(--ink-3);text-transform:uppercase;padding:10px 14px;border-bottom:1px solid var(--line)}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--line-2);font-size:13px}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafcfe}
+.mono{font-family:var(--mono);font-size:12.5px}
+.icon-row{display:flex;align-items:center;gap:8px}
+.icon-btn{width:26px;height:26px;border-radius:5px;display:grid;place-items:center;color:var(--ink-2);border:1px solid var(--line)}
+.icon-btn:hover{background:var(--orange-lt);color:var(--orange);border-color:var(--orange)}
+a.icon-btn{text-decoration:none}
+
+/* ---- modals ---- */
+.veil{position:fixed;inset:0;background:rgba(18,36,58,.45);display:grid;place-items:center;z-index:900;padding:20px}
+.veil[hidden]{display:none}
+.dlg{background:#fff;border-radius:13px;width:min(520px,100%);box-shadow:0 20px 60px rgba(18,36,58,.28)}
+.dlg-head{padding:17px 20px 13px;border-bottom:1px solid var(--line-2);display:flex;justify-content:space-between;align-items:center}
+.dlg-head h3{font-size:16px;font-weight:600}
+.dlg-body{padding:18px 20px}
+.dlg-foot{padding:13px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:9px;background:#fbfcfd;border-radius:0 0 13px 13px}
+.field{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:7px;font-family:inherit;font-size:13.5px;margin-bottom:12px}
+.field:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,98,42,.13)}
+.taglist{border:1px solid var(--line);border-radius:7px;max-height:150px;overflow-y:auto}
+.taglist label{display:flex;align-items:center;gap:9px;padding:8px 12px;border-bottom:1px solid var(--line-2);font-size:13px;cursor:pointer}
+.taglist label:last-child{border-bottom:none}
+.taglist label:hover{background:var(--canvas)}
+
+/* ---- nested menu ---- */
+.menu{border:1px solid var(--line);border-radius:9px;width:270px;overflow:hidden}
+.menu-top{width:100%;text-align:left;padding:11px 14px;font-weight:600;font-size:13.5px;display:flex;justify-content:space-between;align-items:center}
+.menu-top:hover{background:var(--canvas)}
+.menu-sub{border-top:1px solid var(--line-2);background:#fafcfe}
+.menu-sub button{display:block;width:100%;text-align:left;padding:9px 14px 9px 26px;font-size:13px;color:var(--ink-2)}
+.menu-sub button:hover{background:var(--orange-lt);color:var(--orange)}
+.hidden-css{display:none}
+
+/* ---- selector counter ---- */
+.counter{display:flex;gap:9px;flex-wrap:wrap}
+.counter input{flex:1;min-width:260px;padding:9px 11px;border:1px solid var(--line);border-radius:7px;font-family:var(--mono);font-size:12.5px}
+.result{margin-top:12px;font-family:var(--mono);font-size:12.5px;padding:11px 13px;border-radius:7px;display:none}
+.result.show{display:block}
+.result.one{background:var(--green-lt);color:#0a5c40}
+.result.many{background:var(--amber-lt);color:#7a4e08}
+.result.none{background:var(--red-lt);color:#8a2318}
+
+.slow{padding:14px;border:1.5px dashed var(--line);border-radius:9px;color:var(--ink-3);font-size:13px;text-align:center}
+.checklist{list-style:none;font-size:13.5px}
+.checklist li{padding:9px 0;border-bottom:1px solid var(--line-2);display:flex;gap:10px;align-items:flex-start}
+.checklist li:last-child{border-bottom:none}
+.checklist b{font-weight:600}
+.num{width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center;flex:none;margin-top:2px;font-family:var(--mono)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Guide Test Lab</h1>
+  <p>Scratch page for testing pin and trigger behaviour against the DOM patterns in VIS. Not part of the demo.</p>
+  <div class="status">
+    <span><span class="dot" id="ampDot"></span>Amplitude: <b id="ampStatus">connecting…</b></span>
+    <span>Guides: <b id="guidesStatus">checking…</b></span>
+    <span id="projectLabel"></span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ 0. WHAT TO TEST ============ -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">What to test, and in what order</div>
+        <div class="card-why">Build one throwaway guide and point it at each section below. Each answers a question that changes how Michelle's builds have to be designed.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="checklist">
+        <li><span class="num">1</span><div><b>Repeating rows.</b> Does a pin go to the first match? Does an element-click trigger fire on <em>any</em> row, or only the first? This decides the whole tag-icon build.</div></li>
+        <li><span class="num">2</span><div><b>In-place modal.</b> Can a pin anchor to something inside a dialog that renders where it sits in the DOM?</div></li>
+        <li><span class="num">3</span><div><b>Body-portaled modal.</b> Same question when the dialog is moved to the end of <code>&lt;body&gt;</code> on open — this is what Bootstrap does, and VIS is on Bootstrap.</div></li>
+        <li><span class="num">4</span><div><b>Nested menu, removed from DOM.</b> Mirrors the appraisal menu. Confirms the silent-failure behaviour.</div></li>
+        <li><span class="num">5</span><div><b>Nested menu, present but <code>display:none</code>.</b> Different case from #4 and may behave differently. Worth knowing which one VIS actually does.</div></li>
+        <li><span class="num">6</span><div><b>Delayed element.</b> How much trigger delay is needed when content arrives after page load.</div></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ 1. REPEATING ROWS ============ -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">1 · Repeating rows</div>
+        <div class="card-why">Mirrors the VIS inventory list: one tag icon per row. Also reproduces the ambiguity problem — the <code>.icon-btn</code> class is on both the tag <code>&lt;button&gt;</code> and the trade <code>&lt;a&gt;</code>, exactly as in VIS.</div>
+      </div>
+      <span class="badge badge-1">HIGHEST RISK</span>
+    </div>
+    <div class="card-body">
+
+      <div class="sel"><span>button.icon-btn <em style="color:#7b8b9c">— ambiguous, matches every row</em></span><button onclick="copySel('button.icon-btn')">copy</button></div>
+      <div class="sel"><span>[data-guide="row-tag"] <em style="color:#7b8b9c">— also every row</em></span><button onclick="copySel('[data-guide=&quot;row-tag&quot;]')">copy</button></div>
+      <div class="sel"><span>#inventory-table th.col-info <em style="color:#7b8b9c">— single element, the column header</em></span><button onclick="copySel('#inventory-table th.col-info')">copy</button></div>
+
+      <table class="tbl" id="inventory-table">
+        <thead><tr>
+          <th>Stock</th><th>Vehicle</th><th class="col-info" data-guide="col-info-header">Info</th><th>Price</th>
+        </tr></thead>
+        <tbody id="invBody"></tbody>
+      </table>
+
+      <div class="note note-warn">
+        <b>The question:</b> a pin has to anchor to one element, but an element-click trigger may fire on any match.
+        Try it both ways — pin to <code>button.icon-btn</code> and see which row it lands on, then set the trigger to
+        element-click on the same selector and click row 7. If the guide advances, you can trigger on any and pin to one.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 2. IN-PLACE MODAL ============ -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">2 · Modal rendered in place</div>
+        <div class="card-why">Dialog markup lives where it sits in the document and is only shown/hidden. The easier of the two modal cases.</div>
+      </div>
+      <span class="badge badge-2">TEST BOTH</span>
+    </div>
+    <div class="card-body">
+      <button class="btn btn-primary" data-guide="open-inplace" onclick="openInPlace()">Open in-place dialog</button>
+      <div class="sel" style="margin-top:14px"><span>[data-guide="inplace-search"] <em style="color:#7b8b9c">— search field inside the dialog</em></span><button onclick="copySel('[data-guide=&quot;inplace-search&quot;]')">copy</button></div>
+      <div class="sel"><span>[data-guide="inplace-save"] <em style="color:#7b8b9c">— Save button inside the dialog</em></span><button onclick="copySel('[data-guide=&quot;inplace-save&quot;]')">copy</button></div>
+    </div>
+  </div>
+
+  <!-- in-place dialog lives right here in the DOM -->
+  <div class="veil" id="inplaceVeil" hidden>
+    <div class="dlg" role="dialog" aria-modal="true" data-guide="inplace-dialog">
+      <div class="dlg-head"><h3>Vehicle Tags</h3><button class="btn btn-ghost" onclick="closeInPlace()">✕</button></div>
+      <div class="dlg-body">
+        <input class="field" placeholder="Search or create a tag…" data-guide="inplace-search">
+        <div class="taglist">
+          <label><input type="checkbox"> Certified Pre-Owned</label>
+          <label><input type="checkbox" checked> Priority Sale</label>
+          <label><input type="checkbox"> Needs Recon</label>
+          <label><input type="checkbox"> Auction Bound</label>
+          <label><input type="checkbox"> Manager Special</label>
+        </div>
+      </div>
+      <div class="dlg-foot">
+        <button class="btn btn-ghost" onclick="closeInPlace()">Cancel</button>
+        <button class="btn btn-primary" data-guide="inplace-save" onclick="closeInPlace()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 3. BODY-PORTALED MODAL ============ -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">3 · Modal moved to end of &lt;body&gt; on open</div>
+        <div class="card-why">The markup does not exist until you click, and then it is appended to the end of the document rather than here. This is Bootstrap's behaviour, and VIS is on Bootstrap — so this is the case that most likely matches Michelle's Vehicle Tags window.</div>
+      </div>
+      <span class="badge badge-1">MOST LIKELY MATCH</span>
+    </div>
+    <div class="card-body">
+      <button class="btn btn-primary" data-guide="open-portal" onclick="openPortal()">Open portaled dialog</button>
+      <div class="sel" style="margin-top:14px"><span>[data-guide="portal-search"]</span><button onclick="copySel('[data-guide=&quot;portal-search&quot;]')">copy</button></div>
+      <div class="sel"><span>[data-guide="portal-save"]</span><button onclick="copySel('[data-guide=&quot;portal-save&quot;]')">copy</button></div>
+      <div class="note note-info">
+        If a pin works in section 2 but fails here, the problem isn't modals — it's <b>when</b> the element enters the DOM.
+        That's the distinction to bring to Monday.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 4 & 5. NESTED MENUS ============ -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">4 &amp; 5 · Nested menu items</div>
+        <div class="card-why">Mirrors the appraisal flow. Two variants, because "not in the DOM" and "in the DOM but hidden" are different problems and may behave differently.</div>
+      </div>
+      <span class="badge badge-2">TEST BOTH</span>
+    </div>
+    <div class="card-body" style="display:flex;gap:26px;flex-wrap:wrap">
+
+      <div>
+        <div style="font-weight:600;font-size:13px;margin-bottom:9px">4 · Removed from DOM until expanded</div>
+        <div class="menu">
+          <button class="menu-top" data-guide="menu-removed-top" onclick="toggleRemoved()">Appraisals <span id="remCaret">▸</span></button>
+          <div id="removedSub"></div>
+        </div>
+        <div class="sel" style="margin-top:11px"><span>[data-guide="create-appraisal-removed"]</span><button onclick="copySel('[data-guide=&quot;create-appraisal-removed&quot;]')">copy</button></div>
+      </div>
+
+      <div>
+        <div style="font-weight:600;font-size:13px;margin-bottom:9px">5 · Present but display:none</div>
+        <div class="menu">
+          <button class="menu-top" data-guide="menu-hidden-top" onclick="toggleHidden()">Appraisals <span id="hidCaret">▸</span></button>
+          <div class="menu-sub hidden-css" id="hiddenSub">
+            <button data-guide="create-appraisal-hidden">Create Appraisal</button>
+            <button>Appraisal Dashboard</button>
+            <button>Recent Appraisals</button>
+          </div>
+        </div>
+        <div class="sel" style="margin-top:11px"><span>[data-guide="create-appraisal-hidden"]</span><button onclick="copySel('[data-guide=&quot;create-appraisal-hidden&quot;]')">copy</button></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ 6. DELAYED ELEMENT ============ -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">6 · Element that arrives late</div>
+        <div class="card-why">Appears three seconds after load, like a slow table or an async widget. Use it to work out how much trigger delay real pages need.</div>
+      </div>
+      <span class="badge badge-3">TIMING</span>
+    </div>
+    <div class="card-body">
+      <div id="slowSlot"><div class="slow">Loading… (appears after 3s)</div></div>
+      <div class="sel" style="margin-top:12px"><span>[data-guide="late-element"]</span><button onclick="copySel('[data-guide=&quot;late-element&quot;]')">copy</button></div>
+      <button class="btn btn-ghost" style="margin-top:6px" onclick="location.reload()">Reload to test again</button>
+    </div>
+  </div>
+
+  <!-- ============ SELECTOR COUNTER ============ -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Selector match counter</div>
+        <div class="card-why">Paste any selector to see how many elements it matches on this page. The habit worth teaching: count before you commit.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="counter">
+        <input id="selInput" placeholder="button.icon-btn" value="button.icon-btn">
+        <button class="btn btn-primary" onclick="countSel()">Count matches</button>
+        <button class="btn btn-ghost" onclick="flashSel()">Highlight them</button>
+      </div>
+      <div class="result" id="selResult"></div>
+      <div class="note note-ok" style="margin-top:14px">
+        Works on any page — open DevTools on VIS and run
+        <code>document.querySelectorAll('button.info-icon-btn').length</code>
+        to check their real selectors the same way.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="config.js"></script>
+<script>
+/* ---------------- Amplitude (same load order as the main app) ---------------- */
+const CFG = window.DRIVEWELL_CONFIG || {};
+const KEY = CFG.AMPLITUDE_API_KEY;
+const KEY_OK = KEY && !KEY.startsWith("PASTE_");
+
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    const s=document.createElement("script");
+    s.src=src; s.async=false;
+    s.onload=res; s.onerror=()=>rej(new Error("failed: "+src));
+    document.head.appendChild(s);
+  });
+}
+
+async function initAmplitude(){
+  const dot=document.getElementById("ampDot"),
+        lab=document.getElementById("ampStatus"),
+        g=document.getElementById("guidesStatus");
+  document.getElementById("projectLabel").textContent = CFG.PROJECT_LABEL || "";
+
+  if(!KEY_OK){ dot.classList.add("err"); lab.textContent="no API key set"; g.textContent="—"; return; }
+
+  try{
+    await loadScript(`https://cdn.amplitude.com/script/${KEY}.js`);
+    try{ await loadScript(`https://cdn.amplitude.com/script/${KEY}.engagement.js`); }
+    catch(e){ console.warn("[TestLab] engagement SDK didn't load:", e.message); }
+
+    if(window.engagement?.plugin) window.amplitude.add(window.engagement.plugin());
+
+    window.amplitude.init(KEY,{fetchRemoteConfig:true,autocapture:true});
+
+    // Same persona the main app uses, so targeting behaves identically.
+    const p=(CFG.PERSONAS||[])[0];
+    if(p){
+      window.amplitude.setUserId(p.user_id);
+      const id=new window.amplitude.Identify();
+      Object.entries(p.properties).forEach(([k,v])=>id.set(k,v));
+      window.amplitude.identify(id);
+    }
+
+    dot.classList.add("ok"); lab.textContent="connected";
+    setTimeout(()=>{ g.textContent = window.engagement ? "ready" : "not detected"; },2500);
+  }catch(err){
+    dot.classList.add("err"); lab.textContent="not connected"; g.textContent="—";
+    console.error("[TestLab]",err);
+  }
+}
+
+/* ---------------- repeating rows ---------------- */
+const VEHICLES=[
+  ["#31231","2023 Subaru Forester","$32,199"],
+  ["#25-8274","2025 Ford E-350","$48,989"],
+  ["#img2x3","2015 Nissan Altima","$15,901"],
+  ["#S12489","2022 Kia Telluride","$29,992"],
+  ["#44120","2021 Honda CR-V","$27,450"],
+  ["#38801","2024 Toyota Tacoma","$41,300"],
+  ["#29677","2019 Mazda CX-5","$19,875"],
+  ["#51002","2023 Chevy Bolt","$24,600"],
+  ["#47318","2020 Jeep Cherokee","$26,140"],
+  ["#33940","2022 Hyundai Tucson","$25,780"],
+  ["#60112","2024 Ford Bronco","$52,900"],
+  ["#28455","2018 VW Atlas","$21,310"]
+];
+
+document.getElementById("invBody").innerHTML = VEHICLES.map(([stock,name,price],i)=>`
+  <tr>
+    <td class="mono">${stock}</td>
+    <td>${name}</td>
+    <td>
+      <div class="icon-row">
+        <button class="icon-btn" data-guide="row-tag" data-row="${i+1}" title="Tags — row ${i+1}"
+                onclick="tagClick(${i+1})">🏷</button>
+        <a class="icon-btn" href="#" data-guide="row-trade" title="See Trade"
+           onclick="event.preventDefault();alert('Trade link, row ${i+1} — same class as the tag button.')">↗</a>
+        <span class="mono" style="color:var(--ink-3);font-size:11px">row ${i+1}</span>
+      </div>
+    </td>
+    <td class="mono">${price}</td>
+  </tr>`).join("");
+
+function tagClick(row){
+  if(window.amplitude?.track) window.amplitude.track("Test Tag Icon Clicked",{row:row});
+  openInPlace(row);
+}
+
+/* ---------------- in-place modal ---------------- */
+function openInPlace(row){
+  document.getElementById("inplaceVeil").hidden=false;
+  if(window.amplitude?.track) window.amplitude.track("Test InPlace Modal Opened",{row:row||null});
+}
+function closeInPlace(){ document.getElementById("inplaceVeil").hidden=true; }
+
+/* ---------------- body-portaled modal ---------------- */
+let portalEl=null;
+function openPortal(){
+  if(portalEl) return;
+  portalEl=document.createElement("div");
+  portalEl.className="veil";
+  portalEl.innerHTML=`
+    <div class="dlg" role="dialog" aria-modal="true" data-guide="portal-dialog">
+      <div class="dlg-head"><h3>Vehicle Tags (portaled)</h3><button class="btn btn-ghost" id="pClose">✕</button></div>
+      <div class="dlg-body">
+        <input class="field" placeholder="Search or create a tag…" data-guide="portal-search">
+        <div class="taglist">
+          <label><input type="checkbox"> Certified Pre-Owned</label>
+          <label><input type="checkbox" checked> Priority Sale</label>
+          <label><input type="checkbox"> Needs Recon</label>
+          <label><input type="checkbox"> Auction Bound</label>
+        </div>
+        <p style="font-size:12px;color:var(--ink-3);margin-top:11px;font-family:var(--mono)">
+          Appended to end of &lt;body&gt; — inspect to confirm.
+        </p>
+      </div>
+      <div class="dlg-foot">
+        <button class="btn btn-ghost" id="pCancel">Cancel</button>
+        <button class="btn btn-primary" data-guide="portal-save" id="pSave">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(portalEl);
+  ["pClose","pCancel","pSave"].forEach(id=>{
+    portalEl.querySelector("#"+id).addEventListener("click",closePortal);
+  });
+  if(window.amplitude?.track) window.amplitude.track("Test Portal Modal Opened");
+}
+function closePortal(){ if(portalEl){ portalEl.remove(); portalEl=null; } }
+
+/* ---------------- nested menus ---------------- */
+let remOpen=false;
+function toggleRemoved(){
+  const slot=document.getElementById("removedSub");
+  remOpen=!remOpen;
+  document.getElementById("remCaret").textContent = remOpen ? "▾" : "▸";
+  slot.innerHTML = remOpen ? `
+    <div class="menu-sub">
+      <button data-guide="create-appraisal-removed">Create Appraisal</button>
+      <button>Appraisal Dashboard</button>
+      <button>Recent Appraisals</button>
+    </div>` : "";
+}
+
+let hidOpen=false;
+function toggleHidden(){
+  hidOpen=!hidOpen;
+  document.getElementById("hidCaret").textContent = hidOpen ? "▾" : "▸";
+  document.getElementById("hiddenSub").classList.toggle("hidden-css",!hidOpen);
+}
+
+/* ---------------- late element ---------------- */
+setTimeout(()=>{
+  document.getElementById("slowSlot").innerHTML=
+    `<button class="btn btn-primary" data-guide="late-element">Arrived after 3 seconds</button>`;
+},3000);
+
+/* ---------------- selector tools ---------------- */
+function copySel(s){
+  navigator.clipboard?.writeText(s);
+  document.getElementById("selInput").value=s;
+  countSel();
+}
+
+function countSel(){
+  const q=document.getElementById("selInput").value.trim();
+  const box=document.getElementById("selResult");
+  box.className="result show";
+  if(!q){ box.classList.add("none"); box.textContent="Enter a selector."; return; }
+  let list;
+  try{ list=document.querySelectorAll(q); }
+  catch(e){ box.classList.add("none"); box.textContent="Invalid selector: "+e.message; return; }
+
+  const n=list.length;
+  if(n===0){ box.classList.add("none"); box.textContent="0 matches — nothing to pin to."; }
+  else if(n===1){ box.classList.add("one"); box.textContent="1 match — safe to pin."; }
+  else{
+    box.classList.add("many");
+    const tags=[...list].slice(0,4).map(e=>e.tagName.toLowerCase()).join(", ");
+    box.textContent=`${n} matches (${tags}${n>4?", …":""}) — a pin will attach to only one of these.`;
+  }
+}
+
+function flashSel(){
+  const q=document.getElementById("selInput").value.trim();
+  let list; try{ list=document.querySelectorAll(q); }catch(e){ return; }
+  list.forEach(el=>{
+    const prev=el.style.outline;
+    el.style.outline="3px solid #e8622a";
+    el.style.outlineOffset="2px";
+    setTimeout(()=>{ el.style.outline=prev; el.style.outlineOffset=""; },1600);
+  });
+  if(list.length) list[0].scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){ closeInPlace(); closePortal(); }
+});
+
+initAmplitude();
+countSel();
+</script>
+</body>
+</html>
